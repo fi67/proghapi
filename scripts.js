@@ -63,8 +63,8 @@ if(newsContainer){
 }
 
 
-const askJackForm = document.getElementById("askJackForm");
-if(askJackForm){
+const askJack = document.getElementById("askJackForm");
+if(askJack){
     const askJackFormSubmit = e => {
         e.preventDefault();
         const contact = {
@@ -88,5 +88,5 @@ if(askJackForm){
                 localStorage.setItem('contact', JSON.stringify(allContacts));
             });
     };
-    askJackForm.addEventListener('submit', askJackFormSubmit, false);
+    askJack.addEventListener('submit', askJackFormSubmit, false);
 }
