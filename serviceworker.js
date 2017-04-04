@@ -1,5 +1,8 @@
 var BASE_PATH = '/proghapi/';
-var CACHE_NAME = 'gih-cache-v6';
+var CACHE_NAME = 'gih-cache-v7';
+var TEMP_IMAGE_CACHE_NAME = 'temp-cache-v1';
+var newsAPIJSON = "https://newsapi.org/v1/articles?source=bbc-news&apiKey=c0d26668d2dd4049bfd66155dde340b3";
+
 var CACHED_URLS = [
     // Our HTML
     BASE_PATH + 'first.html',
@@ -39,7 +42,10 @@ var CACHED_URLS = [
     BASE_PATH + 'styles.css',
     BASE_PATH + 'appimages/event-default.png',
 BASE_PATH + 'scripts.js',
-BASE_PATH + 'events.json'
+BASE_PATH + 'events.json',
+BASE_PATH + 'second.html',
+BASE_PATH + 'appimages/news-default.jpg'
+
 ];
 
 var googleMapsAPIJS = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCMNj1opBAeNjTEY4PdjCABCwJdrHx0cvI&callback=initMap';
@@ -90,6 +96,18 @@ self.addEventListener('fetch', function(event) {
         });
       })
     );
+  } else if (requestURL.href === newsAPIJSON) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(function(cache) {
+        return fetch(event.request).then(function(networkResponse) {
+          cache.put(event.request, networkResponse.clone());
+          caches.delete(TEMP_IMAGE_CACHE_NAME);
+          return networkResponse;
+        }).catch(function() {
+          return caches.match(event.request);
+        });
+      })
+    );
   // Handle requests for event images.
   } else if (requestURL.pathname.includes('/eventsimages/')) {
     event.respondWith(
@@ -104,13 +122,21 @@ self.addEventListener('fetch', function(event) {
         });
       })
     );
+  // 
+  } else if (requestURL.href.includes('bbci.co.uk/news/')) {
+    event.respondWith(
+      caches.open(TEMP_IMAGE_CACHE_NAME).then(function(cache) {
+        return cache.match(event.request).then(function(cacheResponse) {
+          return cacheResponse||fetch(event.request, {mode: 'no-cors'}).then(function(networkResponse) {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          }).catch(function() {
+            return cache.match('appimages/news-default.jpg');
+          });
+        });
+      })
+    );
  
-      
-      
-      
-      
-      
-      
   } else if (
     CACHED_URLS.includes(requestURL.href) ||
     CACHED_URLS.includes(requestURL.pathname)
